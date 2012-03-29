@@ -1349,7 +1349,7 @@ var DOM = BEM.DOM = BEM.decl('i-bem__dom',/** @lends BEM.DOM.prototype */{
      */
     liveBindTo : function(to, event, callback, invokeOnInit) {
 
-        if(!callback) {
+        if($.isFunction(event)) {
             callback = event;
             event = to;
             to = undefined;
