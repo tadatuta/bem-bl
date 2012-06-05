@@ -1161,7 +1161,7 @@ var DOM = BEM.DOM = BEM.decl('i-bem__dom',/** @lends BEM.DOM.prototype */{
             $.each(getParams(this), function(blockName, blockParams) {
                 if(blockParams.uniqId) {
                     var block = uniqIdToBlock[blockParams.uniqId];
-                    block && block.destruct(true);
+                    block? block.destruct(true) : delete uniqIdToDomElems[blockParams.uniqId];
                 }
             });
             cleanupDomNode(this);
