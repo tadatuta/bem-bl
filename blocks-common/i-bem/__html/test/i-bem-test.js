@@ -13,6 +13,9 @@ suite('i-bem block and others', function() {
   }
 
   function unit(name, file, raw) {
+    function createCache() {
+      return { cache: bemhtml.cache.create() };
+    }
     test(name, function() {
       var contents = {
         src: readFile(file + '.bemhtml'),
@@ -22,12 +25,12 @@ suite('i-bem block and others', function() {
 
       assert.equal(
         bemhtml.compile(iBem + contents.src, { devMode: true, raw: raw })
-            .call(contents.data) + '\n',
+            .call(contents.data, createCache()) + '\n',
         contents.dst
       );
       assert.equal(
         bemhtml.compile(iBem + contents.src, { devMode: false, raw: raw })
-            .call(contents.data) + '\n',
+            .call(contents.data, createCache()) + '\n',
         contents.dst
       );
     });

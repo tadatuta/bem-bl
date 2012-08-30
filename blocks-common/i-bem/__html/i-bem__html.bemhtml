@@ -9,6 +9,7 @@
 
         local(
             this._mode = 'default',
+            this._links = this.ctx.links || this._links,
             this.block = vBlock || (vElem ? block : undefined),
             this._currBlock = vBlock || vElem ? undefined : block,
             this.elem = this.ctx.elem,
@@ -197,6 +198,114 @@ default: {
 
         tag && buf.push('</', tag, '>');
     }
+}
+
+// Cache start
+default, cache && this.ctx.cache: {
+    var cached;
+
+    // setProperty(obj, ['nested', 'key'], 'value')
+    function setProperty(obj, key, value) {
+        if (key.length === 0) return;
+
+        if (Array.isArray(value)) {
+            var target = obj;
+            for (var i = 0; i < value.length - 1; i++) {
+                target = target[value[i]];
+            }
+            value = target[value[i]];
+        }
+
+        var host = obj,
+            previous;
+
+        for (var i = 0; i < key.length - 1; i++) {
+            host = host[key[i]];
+        }
+
+        previous = host[key[i]];
+        host[key[i]] = value;
+
+        return previous;
+    }
+
+    if (cached = cache.get(this.cache)) {
+        // Cache hit
+        for (var i = 0; i < cached.length; i++) {
+            if (typeof cached[i] === 'string') {
+                this._buf.push(cached[i]);
+                continue;
+            }
+
+            // Apply log and create reverse movement
+            var log = cached[i].log,
+                reverseLog = [];
+
+            for (var i = 0; i < log.length; i++) {
+              reverseLog.push({
+                key: log[i].key,
+                value: setProperty(this, log[i].key, log[i].value)
+              });
+            }
+            reverseLog.reverse();
+
+            // Generate content
+            apply();
+
+            // Revert changes
+            for (var i = 0; i < reverse.length; i++) {
+              setProperty(this, reverse[i].key, reverse[i].value)
+            }
+        }
+        return cached.res;
+    }
+
+    // Record log
+    var cacheLog = [],
+        res;
+
+    local(this.ctx.cache = null,
+          this._cachePos = this._buf.length,
+          this._cacheLog = cacheLog,
+          this._localLog = []) {
+        res = apply();
+    };
+
+    // And set cache
+    cache.set(this.cache, { log: cacheLog, res: res });
+
+    return res;
+}
+
+// Data redirection
+default, this.ctx.link: {
+    function follow() {
+        if (this.ctx.link === 'no-follow') return;
+
+        var data = this._links[this.ctx.link];
+        return apply(this.ctx = data);
+    }
+
+    if (!cache) return follow.call(this);
+
+    // Get contents that should be cached
+    var contents = this._buf.slice(this._cachePos).join('');
+
+    // Move buffer position forward
+    this._cachePos = this._buf.length;
+
+    this._cacheLog.push(
+        // static cache entry
+        contents,
+
+        // dynamic entry
+        {
+            log: this._localLog.slice(),
+            link: this.ctx.link
+        }
+    );
+
+    return follow.call(this);
 }
 
 tag: undefined
