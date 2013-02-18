@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "dependencies": {
-    "xjst": "~0.4.2",
+    "xjst": "https://github.com/tadatuta/xjst/tarball/master",
     "ometajs": "~3.2.2",
     "dom-js": "~0.0.9"
   },
